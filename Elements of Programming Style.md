@@ -2,6 +2,100 @@
 
 # Writing Readable Code
 
+## Coding Precision
+
+### Naming  Vividly
+
+#### Specific and Colorful Words 
+
+Names should carry enough information to avoid empty. Also, names should be properly named to avoid ambiguity.
+
+##### Specific Words to Avoid Empty
+
+For example:
+
+```java
+for (int i; i <= corporation.size(); i++){
+    for (int j; j <= department.size(); j++){
+        for (int k; k <= group.size(); k++){
+            if (corporation[i])
+        }
+    }
+}
+```
+
+Another example:
+
+```java
+
+```
+
+
+
+##### Colorful Words to Avoid Ambiguity
+
+For example:
+
+```java
+public jsonObject getPage(String url){
+    //some codes are written here
+}
+```
+
+The method *getPage* is confusing: where the page is gotten, from local cache? from Internet? or even from a data base?
+
+Another example:
+
+```java
+class BinaryTree {
+    private int size;
+    //some codes are written here
+}
+```
+
+The private field *size* is confusing: maybe it means the height of the tree, or the number of nodes of the tree, or even the virtual memory space of the tree.
+
+So, it is necessary to find colorful words to describe variables and methods. Here are some examples:
+
+| Word  | Alternatives                                       |
+| ----- | -------------------------------------------------- |
+| send  | deliver, announce, distribute, route               |
+| find  | search, extract, locate, recover                   |
+| start | launch, begin, create, open                        |
+| make  | create, set up, build, generate, compose, add, new |
+
+##### Attach Units to Ensure Transformation
+
+If your variables are measurements, you are recommended to attach units into the variable. 
+
+For example:
+
+```java
+Long start_ms = new Date().getTime();
+//Some codes here
+Long elapsed_ms = new Date().getTime();
+//Some codes here
+System.out.println("Load time was" + (start_ms - elapsed_ms)/1000 + "seconds");
+```
+
+#### Length is not a Problem
+
+##### Short Name for Short Scope
+
+##### Long Name for Large Scope
+
+### Adding Comments Compactly
+
+
+
+## Coding Aesthetics
+
+### Code is Essay
+
+#### Use Column Alignment
+
+#### Break Code into Paragraph
+
 
 
 # Refactoring
