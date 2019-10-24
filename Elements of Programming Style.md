@@ -90,13 +90,17 @@ System.out.println("Load time was" + (start_ms - elapsed_ms)/1000 + "seconds");
 
 ## Coding Aesthetics
 
-### Code is Essay
+### Code is Work of Art
 
-#### Use Column Alignment
+Your code is a piece of artwork. Just like an essay or image, you must pay enough attention to the style, blank in your code.  On the other hand, irregularity fill in each masterpiece, but not popular in our codes. To avoid irregularity, the first thing flowing into your mind when you program is to *make similar code look similar*. Since our brains tend to process information in terms of groups and hierachies, you can help a reader quickly digest your code by organizing it the following ways. 
 
-#### Break Code into Paragraph
+#### Consistent Style
 
+#### Organizing  Declarations into Groups
 
+#### Breaking Methods into Paragraphs
+
+#### Introducing Compact Line Breaks
 
 # Refactoring
 
@@ -759,6 +763,161 @@ class NorwegianBlueBird extends Bird {
 speed = bird.getSpeed();
 ```
 
+## Simplifying Method Calls
+
+#### Rename Method
+
+##### Why Refactor
+A bad name would be misleading and bing poor code readability. Maybe someone create it in a rush at the very begining, or perhaps its functionality changed gradually in the development process.
+##### Example
+**Before**
+
+```java
+public class Manager {
+    private String officeAeraCode;
+    private String officeNumber;
+    
+    public String getTelephoneNumber(){
+        return officeAeraCode+officeNumber;
+    }
+}
+```
+**After**
+```java
+public class Manager {
+    private String officeAeraCode;
+    private String officeNumber;
+
+    //Tool in IDEA:Refactor -> Rename
+    public String getOfficeTelephoneNumber(){
+        return officeAeraCode+officeNumber;
+    }
+}
+```
+#### Add/remove parameters
+##### Why Refactoring
+You need to make some changes to your method and these changes require adding or removing some data that was previously not avaliable/unnecessary.
+##### Example
+**Before**
+
+```java
+public class Manager {
+    private String officeAeraCode;
+    private String officeNumber;
+    private String name;
+
+    public String getOfficeTelephoneNumber(String department){
+        return name + department + officeAeraCode + officeNumber;
+    }
+}
+```
+**After**
+```java
+public class Manager {
+    private String officeAeraCode;
+    private String officeNumber;
+    private String name;
+    
+    //make the old method call the new one
+    //it is recommended to inject a null value into the added parameters
+    @Deprecated
+    public String getOfficeTelephoneNumber(String department){
+        return getOfficeTelephoneNumber(department,null);
+    }
+    // copy the old method to a new one and remain the name unchanged 
+    public String getOfficeTelephoneNumber(String department,String office){
+        return name + department + office + officeAeraCode + officeNumber;
+    }
+}
+```
+#### Preserve whole object
+##### Why Refactoring
+##### Example 
+**Before**
+```java
+
+```
+
+
+#### Introduce Parameter Object
+##### Why Refactoring
+Identical groups of parameters are often encountered in some methods, increasing the possiblity of long parameters and code duplication. By consolidating parameters in a single class, you can also find more benefits such as moving previous behavious into the created object. So remember moving behaviours and related operations, otherwise the bad smell of *Data Class* begins. 
+##### Example
+**Before**
+
+```java
+import java.util.Date;
+
+public class Entry {
+    private final Date chargeDate;
+    private final double value;
+
+    public Entry(Date chargeDate, double value) {
+        this.chargeDate = chargeDate;
+        this.value = value;
+    }
+
+    public Date getChargeDate() {
+        return chargeDate;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public calculate(Date start,Date end){
+        if (getChargeDate() >= start && getChargeDate() <= end) return (end - getChargeDate())* getValue();
+        if (getChargeDate() < start) return (end - start)*getValue();
+        return 0;
+    }
+}
+```
+**After**
+```java
+import java.util.Date;
+
+public class Entry {
+    private final Date chargeDate;
+    private final double value;
+
+    public Entry(Date chargeDate, double value) {
+        this.chargeDate = chargeDate;
+        this.value = value;
+    }
+
+    public Date getChargeDate() {
+        return chargeDate;
+    }
+
+    public double getValue() {
+        return value;
+    }
+    //replace the identical parameters with object
+    public calculate(DateRange dateRange){
+        if (getChargeDate() >= dateRange.getStart() && getChargeDate() <= dateRange.getEnd()) return (dateRange.getEnd() - getChargeDate())* getValue();
+        if (getChargeDate() < dateRange.getStart()) return (dateRange.getEnd() - dateRange.getStart())*getValue();
+        return 0;
+    }
+}
+class DateRange {
+    private final Date start;
+    private final Date end;
+
+    public Date getStart() {
+        return start;
+    }
+
+    public Date getEnd() {
+        return end;
+    }
+
+    public DateRange(Date start, Date end) {
+        this.start = start;
+        this.end = end;
+    }
+}
+```
+
 # Unit Testing
 
 ## Why Unit Testing
@@ -1035,9 +1194,136 @@ Just like when(….).thenReturn(….) method chain, the DoReturn(...).when(...) 
 
 ## Refactoring Unit Tests
 
+## Integration Testing
 
+An integration test is done to demonstrate that different pieces of the system work together. Integration tests cover whole applications, and they require much more effort to put together. They usually require 
+resources like database instances and hardware to be allocated for them. The integration tests do a more convincing job of demonstrating the system works (especially to non-programmers) than a set of unit tests can, at least to the extent the integration test environment resembles production.
 
 ## Writing Testable Codes
+
+### Integrating Spring TestContext
+
+
+
+```java
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
+public class MyAppTest {
+  //some code here
+}
+```
+
+
+
+### Testing the Database CRUD
+
+#### You Need a Helper
+
+
+
+### Testing with a Mock Environment
+
+By default, `@SpringBootTest` does not start the server. If you have web endpoints that you want to test against this mock environment, you can additionally configure @MockMvc as shown in the following example:
+
+```java
+import tdd.customer.domain.model.Customer;
+import tdd.customer.share.testhelper.JdbcHelper;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
+import static org.assertj.core.api.Assertions.*;
+
+import static tdd.customer.share.testhelper.Utils.*;
+
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+class CustomerControllerJdbcIT {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private JdbcHelper helper;
+
+    @BeforeEach
+    void initDb() {
+        helper.clearCustomerTable();
+    }
+
+    @Test
+    void create_couldCreateCustomer() throws Exception {
+
+        Customer expected = new Customer("Simth", "Jason");
+
+        Long createdId = Long.valueOf(
+                mockMvc.perform(
+                        post("/api/customers")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(asJsonString(expected)))
+                        .andDo(print())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString()
+        );
+
+        Customer actual = helper.findCustomerFromDbById(createdId);
+
+        assertThat(actual).isEqualToComparingOnlyGivenFields(
+                expected
+                , "firstName"
+                , "lastName");
+    }
+
+    @Test
+    void findById_CouldFindCertainCustomer() throws Exception {
+        String expected = asJsonString(
+                helper.createCustomerInDb(
+                        1L, "Andrew", "Jordan")
+        );
+
+        String actual = mockMvc
+                .perform(get("/api/customers/1"))
+                .andDo(print())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertJson(actual, expected);
+    }
+
+    @Test
+    void findAll_couldFindAllCustomer() throws Exception {
+
+        Customer Smith = helper.createCustomerInDb(1L, "Simth", "Jason");
+        Customer Jordan = helper.createCustomerInDb(2L, "Andrew", "Jordan");
+
+        String expected =asJsonString(new Customer[]{Smith, Jordan});
+
+        String actual = mockMvc
+                .perform(get("/api/customers"))
+                .andDo(print())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertJson(actual, expected);
+    }
+}
+```
 
 
 
