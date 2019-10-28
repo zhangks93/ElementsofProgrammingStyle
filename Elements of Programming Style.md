@@ -102,7 +102,200 @@ Your code is a piece of artwork. Just like an essay or image, you must pay enoug
 
 #### Introducing Compact Line Breaks
 
+## Reference
+
+
+
 # Refactoring
+
+## Composing Your Methods
+
+### Extract or Inline
+
+#### Extract Method
+##### Why Refactor
+##### Example
+**Before**
+
+```java
+static void printTotalPrice(){
+    ArrayList<Double> unitPrice = new ArrayList<Double>();
+    unitPrice.add(2.8);
+    unitPrice.add(3.5);
+    unitPrice.add(4.0);
+    double totalPrice = 0.0;
+
+    //print head
+    System.out.println("************************");
+    System.out.println("****Print Total Price***");
+    System.out.println("************************");
+
+    // calculate total price
+    for (Double unit : unitPrice){
+        totalPrice += unit;
+    }
+    //print total price
+    System.out.println("The total price is "+ totalPrice);
+}
+```
+**After**
+Step1:
+```java
+static void printTotalPrice(){
+    ArrayList<Double> unitPrice = new ArrayList<Double>();
+    unitPrice.add(2.8);
+    unitPrice.add(3.5);
+    unitPrice.add(4.0);
+    double totalPrice = 0.0;
+
+    //print head
+    printHead();
+
+    // calculate total price
+    for (Double unit : unitPrice){
+        totalPrice += unit;
+    }
+    //print total price
+    System.out.println("The total price is "+ totalPrice);
+}
+
+//No local variable
+//Solution: just extract the block to a new method
+private static void printHead() {
+    System.out.println("************************");
+    System.out.println("****Print Total Price***");
+    System.out.println("************************");
+}
+```
+Step2:
+```java
+static void printTotalPrice(){
+    ArrayList<Double> unitPrice = new ArrayList<Double>();
+    unitPrice.add(2.8);
+    unitPrice.add(3.5);
+    unitPrice.add(4.0);
+    double totalPrice = 0.0;
+
+    //print head
+    printHead();
+
+    // calculate total price
+    for (Double unit : unitPrice){
+        totalPrice += unit;
+    }
+    //print total price
+    printTotalPrice(totalPrice);
+}
+
+private static void printHead() {
+    System.out.println("************************");
+    System.out.println("****Print Total Price***");
+    System.out.println("************************");
+}
+
+// the method only read the local variable
+// solution: put the local variable into parameter list
+static void printTotalPrice(double totalPrice) {
+    System.out.println("The total price is "+ totalPrice);
+}
+```
+Step3:
+```java
+static void printTotalPrice(){
+    ArrayList<Double> unitPrice = new ArrayList<Double>();
+    unitPrice.add(2.8);
+    unitPrice.add(3.5);
+    unitPrice.add(4.0);
+    double totalPrice = 0.0;
+
+    //print head
+    printHead();
+
+    // calculate total price
+    totalPrice = calculateTotalPrice(unitPrice);
+    //print total price
+    printTotalPrice(totalPrice);
+}
+
+private static void printHead() {
+    System.out.println("************************");
+    System.out.println("****Print Total Price***");
+    System.out.println("************************");
+}
+
+private static void printTotalPrice(double totalPrice) {
+    System.out.println("The total price is "+ totalPrice);
+}
+
+//第三种情况是局部变量有赋值
+//该情况又分为三种
+//其一是这个变量仅在被提炼代码块中使用
+//解决方法：将临时变量的声明移入代码块
+//其二是这个变量在被提代码块之后未被使用
+//解决方法：直接在被提函数中修改该变量即可
+//其三是这个变量在被提代码块之后还有使用
+//解决方法：让目标函数返回该变量改变后的值
+private static double calculateTotalPrice(ArrayList<Double> unitPrice) {
+    double result = 0.0;
+    for (Double unit : unitPrice){
+        result += unit;
+    }
+    return result;
+}
+```
+#### Inline Method
+
+
+###  Small Temp makes Big Mistake
+#### Replace Temp with Query
+##### Why Refactoring
+
+
+##### Example
+**Before**
+```java
+public class TempToQuery {
+    final static int QUANTITY = 10;
+    final static double ITEMPRICE = 2.5;
+    public static void main(String[] args){
+        System.out.println(getPrice());
+    }
+    static double getPrice(){
+        double basePrice = QUANTITY * ITEMPRICE;
+        double discountFactor;
+        if (basePrice > 1000) {
+            discountFactor = 0.95;
+        }
+        else {
+            discountFactor = 0.98;
+        }
+        return basePrice * discountFactor;
+    }
+}
+```
+**After**
+```java
+public class TempToQuery {
+    final static int QUANTITY = 10;
+    final static double ITEMPRICE = 2.5;
+    public static void main(String[] args){
+        System.out.println(getPrice());
+    }
+    static double getPrice(){
+        double discountFactor = DiscountFactor();
+        return BasePrice() * discountFactor;
+    }
+
+    private static double BasePrice() {
+        return QUANTITY * ITEMPRICE;
+    }
+
+    // we must use inline temp during replacing temp with query
+    private static double DiscountFactor() {
+        return BasePrice() > 1000 ? 0.95 : 0.98;
+    }
+}
+```
 
 ## Organizing Data
 
@@ -918,6 +1111,179 @@ class DateRange {
 }
 ```
 
+## Dealing with Generalization
+
+### Home for Field
+
+#### Pull Up Field
+##### why Refactoring
+##### Example
+**Before**
+
+```java
+
+public class Unit {
+    private int Id;
+
+    public Unit(int id) {
+        Id = id;
+    }
+
+    public int getId() {
+        return Id;
+    }
+
+    public void setId(int id) {
+        Id = id;
+    }
+}
+
+class Soldier extends Unit {
+    String weapon;
+
+    public Soldier(int id, String weapon) {
+        super(id);
+        this.weapon = weapon;
+    }
+}
+
+class Tank extends Unit {
+    String weapon;
+
+    public Tank(int id, String weapon) {
+        super(id);
+        this.weapon = weapon;
+    }
+}
+```
+**After**
+```java
+public class Unit {
+    //tool in IDEA: Refactor -> pull members up
+    private String weapon;
+    private int Id;
+
+    public Unit(int id, String weapon) {
+        Id = id;
+        this.weapon = weapon;
+    }
+
+    public int getId() {
+        return Id;
+    }
+
+    public void setId(int id) {
+        Id = id;
+    }
+
+    public String getWeapon() {
+        return weapon;
+    }
+
+    public void setWeapon(String weapon) {
+        this.weapon = weapon;
+    }
+}
+
+class Soldier extends Unit {
+
+    public Soldier(int id, String weapon) {
+        super(id, weapon);
+    }
+}
+
+class Tank extends Unit {
+
+    public Tank(int id, String weapon) {
+        super(id, weapon);
+    }
+}
+```
+#### Push Down Field
+##### why Refactoring
+##### Example
+**Before**
+```java
+
+
+```
+**After**
+```java
+
+
+```
+### Home for Method
+#### Pull Up Method
+##### Why Refactoring
+##### Example
+**Before**
+```java
+
+
+```
+**After**
+```java
+
+
+```
+#### Push Down Method
+##### why Refactoring
+##### Example
+**Before**
+```java
+
+
+```
+**After**
+```java
+
+
+```
+### Extract Generality
+#### Extract Subclass
+##### why Refactoring
+##### Example
+**Before**
+```java
+
+
+```
+**After**
+```java
+
+
+```
+#### Extract Superclass
+##### why Refactoring
+##### Example
+**Before**
+```java
+
+
+```
+**After**
+```java
+
+
+```
+#### Extract Interface
+##### why Refactoring
+##### Example
+**Before**
+```java
+
+
+```
+**After**
+```java
+
+
+```
+
+## Reference
+
+
+
 # Unit Testing
 
 ## Why Unit Testing
@@ -1330,4 +1696,20 @@ class CustomerControllerJdbcIT {
 ## Reference
 
 1. https://www.vogella.com/tutorials/Mockito/article.html
-2. 
+
+# Design Pattern
+
+## Creational Patterns
+
+### Factory
+
+### Abstract Factory
+
+### Singleton
+
+### Builder
+
+## Structural Patterns
+
+## Behavioral Patterns
+
