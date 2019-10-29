@@ -1565,8 +1565,6 @@ Just like when(….).thenReturn(….) method chain, the DoReturn(...).when(...) 
 An integration test is done to demonstrate that different pieces of the system work together. Integration tests cover whole applications, and they require much more effort to put together. They usually require 
 resources like database instances and hardware to be allocated for them. The integration tests do a more convincing job of demonstrating the system works (especially to non-programmers) than a set of unit tests can, at least to the extent the integration test environment resembles production.
 
-## Writing Testable Codes
-
 ### Integrating Spring TestContext
 
 
@@ -1693,6 +1691,10 @@ class CustomerControllerJdbcIT {
 
 
 
+## Writing Testable Codes
+
+
+
 ## Reference
 
 1. https://www.vogella.com/tutorials/Mockito/article.html
@@ -1701,9 +1703,288 @@ class CustomerControllerJdbcIT {
 
 ## Creational Patterns
 
-### Factory
+### Simple Factory
+
+**Factory Method** is a creational design pattern that provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created.
+
+*Comparison between several definitions*
+
+- **Static creation method** is a creation method declared as `static`. In other words, it can be called on a class and doesn’t require an object to be created.
+- The **Factory Method Pattern **is a creational design pattern that provides an interface for creating objects but allows subclasses to  alter the type of an object that will be created.
+- The **Simple factory** pattern  (also known as parameterized factory method )describes a class that has one creation method with a large conditional that based on method parameters chooses which product class to instantiate and then return.
+- The **Abstract Factory**  is a creational design pattern that allows producing families of related or dependent objects without specifying their concrete classes.
+
+#### Application Scenario
+
+Imagine that youare creating an application both for Windows operating system. The first version of your app GUI works well. After a while, you app becomes pretty popular so you must make your app GUI work in MacOS.
+
+How about the code? At present, most of your code is coupled to the Win styled classes. Adding Mac sytled classes into the app would require making changes to the entire codebase. Copying the code to make another Mac version is really a big task ! Maybe one day you need a Linux version, probably you eed to make all of these changes again.
+
+The Factory Method pattern suggests that you replace direct object construction calls (using the new operator) with calls to a special factory method. Don’t worry: the objects are still created via the new operator, but it’s being called from within the factory method. Objects returned by a factory method are often referred to as “products.”
+
+#### Structure
+
+![The structure of the Factory Method pattern](https://refactoring.guru/images/patterns/diagrams/factory-method/structure.png)
+
+#### Sample Code
+
+*buttons/Button.java*
+
+```java
+public interface Button {
+    void click();
+}
+```
+
+*buttons/WinButton.java*
+
+```java
+public WinButton implements Button {
+    @Override
+    void click(){System.out.println("this is a win button!")};
+}
+```
+
+*buttons/MacButton.java*
+
+```java
+public MacButton implements Button {
+    @Override
+    void click(){System.out.println("this is a mac button!")};
+}
+```
+
+*factory/GUIfactory.java*
+
+```java
+public interface GUIfactory {
+    Button createButton();
+}
+```
+
+factory/WinFactory.java*
+
+```java
+public WinFactory implements GUIfactory {
+    @Override
+    Button createButton(){
+        return new WinButton();
+    }
+}
+```
+
+*factory/MacFactory.java*
+
+```java
+public MacFactory implements GUIfactory {
+    @Override
+    Button createButton(){
+        return new MacButton();
+    }
+}
+```
+
+*Application.java*
+
+```java
+public Application　{
+    private Button button;
+    
+    public Application (GUIfactory factory){
+        this.button = factory.createButton();
+    }
+    
+    public void render(){
+        this.button.click();
+    }
+}
+```
+
+*Client.java*
+
+```java
+public class Demo {
+    /**
+     * Application picks the factory type and creates it in run time (usually at
+     * initialization stage), depending on the configuration or environment
+     * variables.
+     */
+    private static Application configureApplication() {
+        Application app;
+        GUIFactory factory;
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("mac")) {
+            factory = new MacOSFactory();
+            app = new Application(factory);
+        } else {
+            factory = new WindowsFactory();
+            app = new Application(factory);
+        }
+        return app;
+    }
+
+    public static void main(String[] args) {
+        Application app = configureApplication();
+        app.render();
+    }
+}
+```
 
 ### Abstract Factory
+
+**Abstract Factory** is a creational design pattern that lets you produce families of related objects without specifying their concrete classes.
+
+#### Application Scenario
+
+Imagine that you are faced with a more complex situation. Button can not represent the whole GUI of your application, you must include inputbox, checkbox and other labels. Obviously, the former factory pattern could not work efficiently to solve this problem. 
+
+**Abstract Factory** pattern suggests explicitly declaring interfaces for each distinct product of the product family (e.g., button, checkbox, inputbox). Then you can make all variants of products follow those interfaces. For example, all button variants can implement the `Button` interface. Next step is to declare the *Abstract Factory*—an interface with a list of creation methods for all products that are part of the product family (for example, `createButton`, `createInpuBox` and `createChackBox`). These methods must return **abstract** product types represented by the interfaces we extracted previously. For each variant of a product family, we create a separate factory class based on the `AbstractFactory` interface. A factory is a class that returns products of a particular kind. 
+
+#### Structure
+
+![Abstract Factory design pattern](https://refactoring.guru/images/patterns/diagrams/abstract-factory/structure.png)
+
+#### Sample Code
+
+*buttons/Button.java*
+
+```java
+public interface Button {
+    void click();
+}
+```
+
+*input/InputBox.java*
+
+```java
+public interface InputBox {
+    void input();
+}
+```
+
+*buttons/WinButton.java*
+
+```java
+public WinButton implements Button {
+    @Override
+    void click(){System.out.println("this is a win button!")};
+}
+```
+
+*buttons/MacButton.java*
+
+```java
+public MacButton implements Button {
+    @Override
+    void click(){System.out.println("this is a mac button!")};
+}
+```
+
+*input/WinInputBox.java*
+
+```java
+public WinInputBox implements InputBox {
+    @Override
+    void input(){System.out.println("this is a win inputbox!")};
+}
+```
+
+*input/MacInputBox.java*
+
+```java
+public MacInputBox implements InputBox {
+    @Override
+    void input(){System.out.println("this is a mac inputbox!")};
+}
+```
+
+*factory/GUIfactory.java*
+
+```java
+public interface GUIfactory {
+    Button createButton();
+    InputBox createInputBox();
+}
+```
+
+*factory/WinFactory.java*
+
+```java
+public WinFactory implements GUIfactory {
+    @Override
+    Button createButton(){
+        return new WinButton();
+    }
+    @Override
+    InputBox createInputBox(){
+        return new WinInputBox();
+    }
+}
+```
+
+*factory/MacFactory.java*
+
+```java
+public MacFactory implements GUIfactory {
+    @Override
+    Button createButton(){
+        return new MacButton();
+    }
+    @Override
+    InputBox createInputBox(){
+        return new MacInputBox();
+    }
+}
+```
+
+*Application.java*
+
+```java
+public Application　{
+    private Button button;
+    private InputBox inputbox;
+    
+    public Application (GUIfactory factory){
+        this.button = factory.createButton();
+        this.inputbox = factory.createInputBox();
+    }
+    
+    public void render(){
+        this.button.click();
+        this.inputbox.input();
+    }
+}
+```
+
+*Client.java*
+
+```java
+public class Demo {
+    /**
+     * Application picks the factory type and creates it in run time (usually at
+     * initialization stage), depending on the configuration or environment
+     * variables.
+     */
+    private static Application configureApplication() {
+        Application app;
+        GUIFactory factory;
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("mac")) {
+            factory = new MacOSFactory();
+            app = new Application(factory);
+        } else {
+            factory = new WindowsFactory();
+            app = new Application(factory);
+        }
+        return app;
+    }
+
+    public static void main(String[] args) {
+        Application app = configureApplication();
+        app.render();
+    }
+}
+```
 
 ### Singleton
 
