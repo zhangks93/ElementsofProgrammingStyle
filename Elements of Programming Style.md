@@ -1703,7 +1703,16 @@ class CustomerControllerJdbcIT {
 
 ## Creational Patterns
 
-### Simple Factory
+Java supplies default constructors and default constructor behavior in some cases :
+
+- If a class has no declared constructor, Java will supply a default one (a public constructor with no argument);
+- If a constructor declaration does not use a variation of this() or super() to explicitly invoke another constructor, Java effectively inserts super() with no arguments;
+- You can only invoke constructor to instantiate by *new* operator or by reflection;
+- constructors are effective only if the user
+  of your class knows which class to instantiate and knows the required
+  fields for instantiating an object. 
+
+### Factory Method
 
 **Factory Method** is a creational design pattern that provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created.
 
@@ -1988,7 +1997,139 @@ public class Demo {
 
 ### Singleton
 
+#### Application Scenario
+
+
+
+#### Structure
+
+
+
+#### Sample Code
+
+
+
 ### Builder
+
+The intend of **Builder Pattern**   is to allow step-by-step construction of a target object when you acquire the parameters for a constructor gradually and production of various types and representations of an object just from the same construction code.
+
+#### Application Scenario
+
+Imagine that you want to create a `House` object. To build a simple house, you need to construct four walls and a floor, install a door, fit a pair of windows, and build a roof. But what if you want a bigger, brighter 
+house with a backyard and other goodies (like a heating system, plumbing, and electrical wiring)?
+
+The simplest solution is to extend the base `House` class and create a set of subclasses, but numerous subclasses are really difficult to maintain! Another approach that does not involve breeding subclasses is to create a giant constructor right in the base `House` class with all possible parameters that control the house object. However, th ugly constructor is accompanied by a long list of useless parameters.
+
+#### Structure
+
+![Structure of the Builder design pattern](https://refactoring.guru/images/patterns/diagrams/builder/structure.png)
+
+#### Sample Code
+
+*Computer.java*
+
+```java
+public class Person {
+    /*name required*/
+    private final String name;
+    /*gender required*/
+    private final String gender;
+    /*age not required*/
+    private final String age;
+    /*choes not required*/
+    private final String shoes;
+    /*clothes not required*/
+    private final String clothes;
+    /*money not required*/
+    private final String money;
+    /*house not reuqired*/
+    private final String house;
+    /*car not required*/
+    private final String car;
+    /*carrer not required*/
+    private final String career;
+
+
+    private Person(Builder builder) {
+        this.name = builder.name;
+        this.gender = builder.gender;
+        this.age = builder.age;
+        this.shoes = builder.shoes;
+        this.clothes = builder.clothes;
+        this.money = builder.money;
+        this.house = builder.house;
+        this.car = builder.car;
+        this.career = builder.career;
+    }
+
+    public static class Builder {
+        private final String name;
+        private final String gender;
+        private String age;
+        private String shoes;
+        private String clothes;
+        private String money;
+        private String house;
+        private String car;
+        private String career;
+
+        public Builder(String name,String gender) {
+            this.name = name;
+            this.gender = gender;
+        }
+
+        public Builder age(String age) {
+            this.age = age;
+            return this;
+        }
+
+        public Builder car(String car) {
+            this.car = car;
+            return this;
+        }
+
+        public Builder shoes(String shoes) {
+            this.shoes = shoes;
+            return this;
+        }
+
+        public Builder clothes(String clothes) {
+            this.clothes = clothes;
+            return this;
+        }
+
+        public Builder money(String money) {
+            this.money = money;
+            return this;
+        }
+
+        public Builder house(String house) {
+            this.house = house;
+            return this;
+        }
+
+        public Builder career(String career) {
+            this.career = career;
+            return this;
+        }
+
+        public Person build(){
+            return new Person(this);
+        }
+    }
+```
+
+As a result, you can create a person by this way:
+
+```java
+Person person = new Person.Builder("Jack","Male")
+                .age("12")
+                .money("10000")
+                .car("Audi")
+                .build();
+```
+
+
 
 ## Structural Patterns
 
