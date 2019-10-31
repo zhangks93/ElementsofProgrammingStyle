@@ -1708,9 +1708,7 @@ Java supplies default constructors and default constructor behavior in some case
 - If a class has no declared constructor, Java will supply a default one (a public constructor with no argument);
 - If a constructor declaration does not use a variation of this() or super() to explicitly invoke another constructor, Java effectively inserts super() with no arguments;
 - You can only invoke constructor to instantiate by *new* operator or by reflection;
-- constructors are effective only if the user
-  of your class knows which class to instantiate and knows the required
-  fields for instantiating an object. 
+- constructors are effective only if the user of your class knows which class to instantiate and knows the required fields for instantiating an object. 
 
 ### Factory Method
 
@@ -1997,15 +1995,45 @@ public class Demo {
 
 ### Singleton
 
+**Singleton** is a creational design pattern that lets you ensure that a class has only one instance, while providing a global access point to this instance.
+
 #### Application Scenario
 
+**Ensure that a class has just a single instance**. Why would anyone want to control how many instances a class has? The most common reason for this is to control access to some shared resource—for example, a database or a file.
 
+**Provide a global access point to that instance**.  Remember those global variables that you (all right, me) used to store  some essential objects? While they’re very handy, they’re also very  unsafe since any code can potentially overwrite the contents of those  variables and crash the app.
+
+Just like a global variable, the Singleton pattern lets you access  some object from anywhere in the program. However, it also protects that  instance from being overwritten by other code.
 
 #### Structure
 
-
+![The structure of the Singleton pattern](https://refactoring.guru/images/patterns/diagrams/singleton/structure-en.png)
 
 #### Sample Code
+
+```java
+public final class Singleton {
+    private static Singleton instance;
+    public String value;
+
+    private Singleton(String value) {
+        // The following code emulates slow initialization.
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+        this.value = value;
+    }
+
+    public static Singleton getInstance(String value) {
+        if (instance == null) {
+            instance = new Singleton(value);
+        }
+        return instance;
+    }
+}
+```
 
 
 
@@ -2129,9 +2157,112 @@ Person person = new Person.Builder("Jack","Male")
                 .build();
 ```
 
+### Prototype
+
+**Prototype** is a creational design pattern that lets you copy existing objects without making your code dependent on their classes.
+
+#### Application Scenario
+
+Imagine that you have an object, and you want to create an exact copy of it.  How would you do it? First, you have to create a new object of the same  class. Then you have to go through all the fields of the original object  and copy their values over to the new object. However, not all objects can be copied that way  because some of the  fields may be private and not visible from outside of the object itself.
+
+The Prototype pattern delegates the cloning process to the actual objects that are being cloned. The pattern declares a common interface `clone`  to create an object of the current class and  carries over all of the field values of the old object into the new one since access of private fields belonging to the same  class is reasonable. An object that supports cloning is called a *prototype*. 
+
+#### Structure
+
+![The structure of the Prototype design pattern](https://refactoring.guru/images/patterns/diagrams/prototype/structure.png)
+
+#### Sample Code
+
+Any class (java.lang.Object #clone())can implement this interface (java.lang.Cloneable) to become cloneable.
+
+*Shape.java*
+
+```java
+import java.util.Objects;
+
+public abstract class Shape {
+    public int x;
+    public int y;
+    public String color;
+
+    public Shape() {
+    }
+
+    public Shape(Shape target) {
+        if (target != null) {
+            this.x = target.x;
+            this.y = target.y;
+            this.color = target.color;
+        }
+    }
+
+    public abstract Shape clone();
+
+}
+```
+
+*Circle.java*
+
+```java
+public class Circle extends Shape {
+    public int radius;
+
+    public Circle() {
+    }
+
+    public Circle(Circle target) {
+        super(target);
+        if (target != null) {
+            this.radius = target.radius;
+        }
+    }
+
+    @Override
+    public Shape clone() {
+        return new Circle(this);
+    }
+}
+```
+
+*Demo.java*
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+    List<Shape> list = new List<>();
+    
+     Circle circle = new Circle();
+     circle.x = 10;
+     circle.y = 20;
+     circle.radius = 15;
+     circle.color = "red";
+     shapes.add(circle);
+
+     Circle anotherCircle = (Circle) circle.clone();
+     shapes.add(anotherCircle);
+        
+    }
+```
+
 
 
 ## Structural Patterns
 
+### Adapter
+
+**Adapter** is a structural design pattern that allows objects with incompatible interfaces to collaborate.
+
+#### Application Scenario
+
+#### Structure
+
+#### Sample Code
+
+
+
 ## Behavioral Patterns
+
+### 
+
+
 
