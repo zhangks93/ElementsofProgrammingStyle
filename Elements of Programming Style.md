@@ -2258,6 +2258,105 @@ public class Demo {
 
 #### Sample Code
 
+### Composite
+
+The **composite pattern** is a structural pattern that groups a set of objects into a tree structure so that they may be manipulated as though they were one object. It contains three main compositions:
+
+- The component protocol ensures all constructs in the tree can be treated the same way.
+- A leaf is a component of the tree that does not have child elements.
+- A composite is a container that can hold leaf objects and composites.
+
+#### Application Scenario
+
+Imagine that you have two types of objects: `Gifts` and `Boxes`. A `Box` can contain several `Gifts` as well as a number of smaller `Boxes`. These little `Boxes` can also hold some `Gifts` or even smaller `Boxes`, and so on. Say you decide to the sum price of the whole box.  The biggest box could contain simple gifts without any wrapping, as well as  boxes stuffed with gifts...and other boxes. How would you determine  the total price?
+
+The Composite pattern suggests that you work with `Products` and `Boxes` through a common interface which declares a method for calculating the total price.
+
+#### Structure
+
+![Structure of the Composite design pattern](https://refactoring.guru/images/patterns/diagrams/composite/structure-en.png)
+
+#### Sample Code
+
+*Composite.java*
+
+```java
+public interface Composite {
+    float calculateSum();
+}
+```
+
+*Box.java*
+
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class Box implements Composite {
+    List<Composite> children = new ArrayList<>();
+
+    public Box(Composite... children){
+        add(children);
+    }
+
+    void add(Composite component){
+        children.add(component);
+    }
+
+    void add(Composite... components){
+        children.addAll(Arrays.asList(components));
+    }
+
+    @Override
+    public float calculateSum() {
+        if (children.isEmpty()) {
+            return 0;
+        } else {
+            float sum = 0;
+            for (Composite child : children) {
+                sum = sum + child.calculateSum();
+            }
+            return sum;
+        }
+    }
+}
+```
+
+*Gift.java*
+
+```java
+public class Gift implements Composite{
+    float price;
+
+    public Gift(float price) {
+        this.price = price;
+    }
+
+    @Override
+    public float calculateSum() {
+        return price;
+    }
+}
+
+```
+
+*Demo.java*
+
+```java
+public class Demo {
+    public static void main(String[] args){
+        Box box = new Box(
+                new Gift((float) 5.5),
+                new Box(new Gift((float) 2.0), new Gift(3)),
+                new Gift((float) 4.5),
+                new Box(new Gift((float) 1.0))
+        );
+        System.out.println(box.calculateSum());
+    }
+}
+```
+
 
 
 ## Behavioral Patterns
