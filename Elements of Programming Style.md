@@ -2357,6 +2357,269 @@ public class Demo {
 }
 ```
 
+### Decorator
+
+#### Application Scenario
+
+Imagine that you are working on a notification library which lets other programs notify their users about important events. At first, all notifications are sent in emails. However, you realize that users of the library expect more than just email notifications. Many of them would like to receive an SMS about critical 
+issues. Others would like to be notified on Facebook. You tried to address that problem by creating special subclasses which combined several notification methods within one class. However, it quickly became apparent that this approach would bloat the code immensely, not only the library code but the client code as well.
+
+
+
+#### Structure
+
+![Structure of the Decorator design pattern](https://refactoring.guru/images/patterns/diagrams/decorator/structure.png)
+
+#### Sample Code
+
+*Beverage.class*
+
+```java
+public abstract class Beverage {
+    protected String description = "Unknow Beverage";
+
+    public String getDescription() {
+        return description;
+    }
+
+    public abstract double cost();
+}
+```
+
+*Coco.class*
+
+```java
+public class Coco extends Beverage {
+    public Coco(){
+        description = "Coco";
+    }
+
+    public double cost(){
+        return 0.85;
+    }
+}
+```
+
+*Coffee.class*
+
+```java
+public class Coffee extends Beverage {
+    public Coffee(){
+        description = "Coffee";
+    }
+
+    public double cost(){
+        return 0.65;
+    }
+}
+```
+
+*Decorator.class*
+
+```java
+public abstract class Decorator extends Beverage {
+    protected Beverage beverage;
+
+    public Decorator(Beverage beverage) {
+        this.beverage = beverage;
+    }
+}
+```
+
+*Moka.class*
+
+```java
+public class Moka extends Decorator {
+
+    public Moka(Beverage beverage){
+        super(beverage);
+    }
+
+    @Override
+    public String getDescription() {
+        return beverage.getDescription() + "Moka";
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 0.15;
+    }
+}
+```
+
+*Soy.class*
+
+```java
+public class Soy extends Decorator {
+
+    public Soy(Beverage beverage){
+        super(beverage);
+    }
+
+    @Override
+    public String getDescription() {
+        return beverage.getDescription() + "Soy";
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 0.25;
+    }
+}
+```
+
+*Client.class*
+
+```java
+public class Client {
+    public static void main(String[] args){
+        Beverage first_cup = new Coco();
+        System.out.println("The first cup is " + first_cup.getDescription() + "and you must pay" + first_cup.cost() + "dollars!");
+
+        Beverage second_cup = new Coco();
+        second_cup = new Soy(second_cup);
+        System.out.println("The second cup is " + second_cup.getDescription() + "and you must pay" + second_cup.cost() + "dollars!");
+
+        Beverage third_cup = new Coffee();
+        third_cup = new Moka(third_cup);
+        third_cup = new Soy(third_cup);
+        System.out.println("The third cup is " + third_cup.getDescription() + "and you must pay" + third_cup.cost() + "dollars!");
+
+    }
+}
+```
+
+### Facade 
+
+#### Application Scenario
+
+Imagine that you must make your code work with a broad set of objects that belong to a sophisticated library or framework. Ordinarily, you would need to initialize all of those objects, keep track of dependencies, execute methods in the correct order, and so on.
+
+A facade is a class that provides a simple interface to a complex subsystem which contains lots of moving parts. A facade might provide limited functionality in comparison to working with the subsystem directly. However, it includes only those features that clients really care about.
+
+#### Structure
+
+![Structure of the Facade design pattern](https://refactoring.guru/images/patterns/diagrams/facade/structure.png)
+
+#### Sample Code
+
+*Cpu.class*
+
+```java
+public class Cpu {
+    String brand;
+
+    public Cpu(String brand) {
+        this.brand = brand;
+    }
+
+    public String getBrand() {
+        return brand + ("Cpu");
+    }
+
+    public void run(){
+        System.out.println(getBrand() + " " + "is running!");
+    }
+}
+```
+
+*Memory.class*
+
+```java
+public class Memory {
+    String brand;
+
+    public Memory(String brand) {
+        this.brand = brand;
+    }
+
+    public String getBrand() {
+        return brand + ("Memory");
+    }
+
+    public void run(){
+        System.out.println(getBrand() + " " + "is running!");
+    }
+}
+```
+
+*HardDrive.class*
+
+```java
+public class HardDrive {
+    String brand;
+
+    public HardDrive(String brand) {
+        this.brand = brand;
+    }
+
+    public String getBrand() {
+        return brand + ("HardDrive");
+    }
+
+    public void run(){
+        System.out.println(getBrand() + " " + "is running!");
+    }
+}
+
+```
+
+*Facade.class*
+
+```java
+public class Facade {
+    private Cpu cpu;
+    private Memory memory;
+    private  HardDrive hardDrive;
+
+    public Facade(Cpu cpu, Memory memory, HardDrive hardDrive) {
+        this.cpu = cpu;
+        this.memory = memory;
+        this.hardDrive = hardDrive;
+    }
+
+    public void run(){
+        cpu.run();
+        memory.run();
+        hardDrive.run();
+    }
+}
+```
+
+*Computer.class*
+
+```java
+public class Computer {
+    Facade facade;
+
+    public Computer(Facade facade) {
+        this.facade = facade;
+    }
+
+    public void run(){
+        facade.run();
+    }
+}
+```
+
+*Client.class*
+
+```java
+public class Client {
+    public static void main(String[] args) {
+        Cpu cpu = new Cpu("Intel");
+        Memory memory = new Memory("Sandisk");
+        HardDrive hardDrive = new HardDrive("Toshiba");
+
+        Facade facade = new Facade(cpu,memory,hardDrive);
+
+        Computer computer = new Computer(facade);
+
+        computer.run();
+    }
+}
+```
+
 
 
 ## Behavioral Patterns
