@@ -2620,6 +2620,265 @@ public class Client {
 }
 ```
 
+### Flyweight
+
+**Flyweight** is a structural design pattern that allows programs to support vast quantities of objects by keeping their memory consumption low. 
+
+Use the Flyweight pattern only when your program must support a huge number of similar objects which barely fit into available RAM.
+
+#### Application Scenario
+
+#### Structure
+
+![Structure of the Flyweight design pattern](https://refactoring.guru/images/patterns/diagrams/flyweight/structure.png)
+
+#### Sample Code
+
+*Tree.java*
+
+```java
+import java.awt.*;
+
+public class Tree {
+    private int x;
+    private int y;
+    private TreeType type;
+
+    public Tree(int x, int y, TreeType type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+    }
+
+    public void draw(Graphics g) {
+        type.draw(g, x, y);
+    }
+}
+```
+
+*TreeType.java*
+
+```java
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TreeType {
+    private String name;
+    private Color color;
+    private  static Map<String,TreeType> map = new HashMap<>();
+
+    private TreeType(String name, Color color) {
+        this.name = name;
+        this.color = color;
+    }
+
+    public static TreeType TreeTypeFactory(String name, Color color){
+        TreeType result = map.get(name);
+        if (result == null){
+            map.put(name,new TreeType(name,color));
+            result = map.get(name);
+        }
+        return result;
+    }
+
+    public void draw(Graphics g, int x, int y) {
+        g.setColor(Color.BLACK);
+        g.fillRect(x - 1, y, 3, 5);
+        g.setColor(color);
+        g.fillOval(x - 5, y - 10, 10, 10);
+    }
+}
+```
+
+*Forest.java*
+
+```java
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Forest extends JFrame {
+    private List<Tree> trees = new ArrayList<>();
+
+    public void plantTree(int x, int y, String name, Color color) {
+        TreeType type = TreeType.TreeTypeFactory(name, color);
+        Tree tree = new Tree(x, y, type);
+        trees.add(tree);
+    }
+
+    @Override
+    public void paint(Graphics graphics) {
+        for (Tree tree : trees) {
+            tree.draw(graphics);
+        }
+    }
+}
+```
+
+*Client.java*
+
+```java
+import java.awt.*;
+
+public class Client {
+    static int CANVAS_SIZE = 500;
+    static int TREES_TO_DRAW = 1000000;
+    static int TREE_TYPES = 2;
+
+    public static void main(String[] args) {
+        Forest forest = new Forest();
+        for (int i = 0; i < Math.floor(TREES_TO_DRAW / TREE_TYPES); i++) {
+            forest.plantTree(random(0, CANVAS_SIZE), random(0, CANVAS_SIZE),
+                    "Summer Oak", Color.GREEN);
+            forest.plantTree(random(0, CANVAS_SIZE), random(0, CANVAS_SIZE),
+                    "Autumn Oak", Color.ORANGE);
+        }
+        forest.setSize(CANVAS_SIZE, CANVAS_SIZE);
+        forest.setVisible(true);
+
+        System.out.println(TREES_TO_DRAW + " trees drawn");
+        System.out.println("---------------------");
+        System.out.println("Memory usage:");
+        System.out.println("Tree size (8 bytes) * " + TREES_TO_DRAW);
+        System.out.println("+ TreeTypes size (~30 bytes) * " + TREE_TYPES + "");
+        System.out.println("---------------------");
+        System.out.println("Total: " + ((TREES_TO_DRAW * 8 + TREE_TYPES * 30) / 1024 / 1024) +
+                "MB (instead of " + ((TREES_TO_DRAW * 38) / 1024 / 1024) + "MB)");
+    }
+
+    private static int random(int min, int max) {
+        return min + (int) (Math.random() * ((max - min) + 1));
+    }
+}
+```
+
+### Proxy
+
+**Proxy** is a structural design pattern that provides an object that acts as a substitute for a real service object used by a client. A proxy receives client requests, does some work (access control, caching, etc.) and then passes the request to a service object.
+
+#### Application Scenario
+
+Imagine that you have a massive object that consumes a vast amount of system resources. You need it from time to time, but not always. An approach is to solve this problem is to implement lazy initialization: you can call every client to create this object when it is needed. But the disadvantage is also clear: a lot of code duplication emerge. 
+
+The **Proxy pattern** suggests that you create a new proxy class with the same interface as an original service object.  Upon receiving a request from a client, the proxy creates a real service object and delegates all the work to it. The benefit is that you can excute something either before or after the primary logic of the class without changing that class!
+
+Credit cards is an example of proxy.  Both credit cards and cash implement the payment interface. With the credit card,  customers feel comfortable because there is no need for them to carry loads of cash around. And shop owner is also happy since the income from a transaction gets added electronically to the shop’s bank account without the risk of losing the deposit or getting robbed on the way to the bank.
+
+#### Structure
+
+![Structure of the Proxy design pattern](https://refactoring.guru/images/patterns/diagrams/proxy/structure.png)
+
+#### Sample Code
+
+*Star.java*
+
+```java
+public interface Star {
+    void signContract();
+    void bookTicket();
+    void sing();
+    void collectMoney();
+}
+```
+
+*RealStar.java*
+
+```java
+public class RealStar implements Star {
+    @Override
+    public void signContract() {
+        System.out.println("real star is signing a contract");
+    }
+
+    @Override
+    public void bookTicket() {
+        System.out.println("real star is booking a ticket");
+    }
+
+    @Override
+    public void sing() {
+        System.out.println("real star is singing");
+    }
+
+    @Override
+    public void collectMoney() {
+        System.out.println("real star is collecting money");
+    }
+}
+```
+
+*Proxy.java*
+
+```java
+public class Proxy implements Star {
+    private Star star;
+
+    public Proxy(Star star) {
+        this.star = star;
+    }
+
+
+    @Override
+    public void signContract() {
+        System.out.println("proxy is signing a contract");
+    }
+
+    @Override
+    public void bookTicket() {
+        System.out.println("proxy is booking a ticket");
+    }
+
+    @Override
+    public void sing() {
+        star.sing();
+    }
+
+    @Override
+    public void collectMoney() {
+        System.out.println("Proxy is collecting money");
+    }
+}
+```
+
+*Client.java*
+
+```java
+public class Client {
+    public static void main(String[] args){
+        Star real = new RealStar();
+        Star proxy = new Proxy(real);
+
+        proxy.signContract();
+        proxy.bookTicket();
+        proxy.sing();
+        proxy.collectMoney();
+    }
+}
+```
+
+Or you can implements *InvocationHandler* to achive dynamic proxy.
+
+```java
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+public class StarHandler implements InvocationHandler {
+    private Star realstar;
+
+    public StarHandler(Star star) {
+        this.realstar = star;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        method.invoke(realstar,args);
+        return null;
+    }
+}
+```
+
 
 
 ## Behavioral Patterns
