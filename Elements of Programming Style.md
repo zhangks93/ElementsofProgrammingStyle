@@ -2258,6 +2258,14 @@ public class Demo {
 
 #### Sample Code
 
+### Bridge 
+
+### Application Scenario
+
+#### Structure
+
+#### Sample Code
+
 ### Composite
 
 The **composite pattern** is a structural pattern that groups a set of objects into a tree structure so that they may be manipulated as though they were one object. It contains three main compositions:
