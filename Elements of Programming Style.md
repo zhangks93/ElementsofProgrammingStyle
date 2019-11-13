@@ -2254,17 +2254,235 @@ public class Demo {
 
 #### Application Scenario
 
+Imagine that you’re creating a stock market monitoring app. The app  downloads the stock data from multiple sources in XML format and then  displays nice-looking charts and diagrams for the user.
+
+At the same time,  you decide to improve the app by integrating a smart  3rd-party analytics library, which requires the data to be in JSON format. 
+
+You can create an *adapter*. This is a special object that converts the interface of one object so that another object can understand it.
+
 #### Structure
 
+![Structure of the Adapter design pattern (the object adapter)](https://refactoring.guru/images/patterns/diagrams/adapter/structure-object-adapter.png)
+
 #### Sample Code
+
+For some common examples, you can find in *java.util.Arrays.asList,  java.util.Collections.List*.
+
+*RoundHole.java*
+
+```java
+public class RoundHole {
+    double radis;
+
+    public RoundHole(double radis) {
+        this.radis = radis;
+    }
+
+    public double getRadis() {
+        return radis;
+    }
+
+    public boolean fitted(RoundPeg peg){
+        return (this.radis <= peg.getRadis())? true:false;
+    }
+}
+```
+
+*RounfPeg.java*
+
+```java
+public class RoundPeg {
+    double radis;
+
+    public RoundPeg(double radis) {
+        this.radis = radis;
+    }
+
+    public RoundPeg() {
+    }
+
+    public double getRadis() {
+        return radis;
+    }
+}
+```
+
+*SquarePeg.java*
+
+```java
+public class SquarePeg {
+    double width;
+
+    public SquarePeg(double width) {
+        this.width = width;
+    }
+
+    public double getWidth() {
+        return width;
+    }
+}
+```
+
+*RoundAdaptor.java*
+
+```java
+public class RoundAdaptor extends RoundPeg {
+    SquarePeg squarePeg;
+
+    public RoundAdaptor(SquarePeg squarePeg) {
+        super();
+        this.squarePeg = squarePeg;
+    }
+
+    @Override
+    public double getRadis() {
+        return Math.sqrt(Math.pow(squarePeg.getWidth()/2,2)*2);
+    }
+}
+
+```
+
+*Client.java*
+
+```java
+public class Client {
+
+    public static void main(String[] args){
+        RoundHole hole = new RoundHole(5);
+        RoundPeg rpeg = new RoundPeg(5);
+        if (hole.fitted(rpeg)) {
+            System.out.println("Round peg r5 fits round hole r5.");
+        }
+
+        SquarePeg smallSqPeg = new SquarePeg(2);
+        SquarePeg largeSqPeg = new SquarePeg(20);
+
+        RoundAdaptor small = new RoundAdaptor(smallSqPeg);
+        RoundAdaptor large = new RoundAdaptor(largeSqPeg);
+
+        if (hole.fitted(small)){
+            System.out.println("Small square peg fits round hole r5.");
+        }
+
+        if (hole.fitted(large)){
+            System.out.println("Large square peg fits round hole r5.");
+        }
+
+    }
+}
+```
 
 ### Bridge 
 
-### Application Scenario
+**Bridge** is a structural design pattern that divides business logic or huge class into separate class hierarchies that can be developed independently.
+
+#### Application Scenario
+
+
 
 #### Structure
 
+![Bridge design pattern](https://refactoring.guru/images/patterns/diagrams/bridge/structure-en.png)
+
 #### Sample Code
+
+*System.java*
+
+```java
+public interface System {
+    String assertSystem();
+}
+
+class Windows implements System {
+    @Override
+    public String assertSystem(){
+        return " In Windows System ";
+    }
+}
+
+ class Linux implements System {
+    @Override
+    public String assertSystem(){
+        return " In Linux System ";
+    }
+}
+
+ class Mac implements System {
+    @Override
+    public String assertSystem(){
+        return " In Mac System ";
+    }
+}
+```
+
+*Image.java*
+
+```java
+public class Image {
+    System system;
+
+    public Image(System system) {
+        this.system = system;
+    }
+
+    public void print(){
+
+    }
+}
+
+class JPEG extends Image {
+
+    public JPEG(System system) {
+        super(system);
+    }
+
+    @Override
+    public void print(){
+        java.lang.System.out.println(system.assertSystem() + "I am a JPEG image!");
+    }
+}
+
+class PNG extends Image {
+
+    public PNG(System system) {
+        super(system);
+    }
+
+    @Override
+    public void print(){
+        java.lang.System.out.println(system.assertSystem() + "I am a PNG image!");
+    }
+}
+
+class GIF extends Image {
+
+    public GIF(System system) {
+        super(system);
+    }
+
+    @Override
+    public void print(){
+        java.lang.System.out.println(system.assertSystem() + "I am a GIF image!");
+    }
+}
+```
+
+*Client.java*
+
+```java
+public class Client {
+    public static void main(String[] args){
+        Image jpeg = new JPEG(new Windows());
+        Image png = new PNG(new Mac());
+
+        jpeg.print();
+        png.print();
+
+    }
+}
+```
+
+
 
 ### Composite
 
