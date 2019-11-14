@@ -3109,7 +3109,160 @@ public class StarHandler implements InvocationHandler {
 
 ## Behavioral Patterns
 
-### 
+### Chain of Responsbility
+
+**Chain of Responsibility** is a behavioral design pattern that lets you pass requests along a chain of handlers. Upon receiving a request, each handler decides either to process the request or to pass 
+it to the next handler in the chain.
+
+#### Application Scenario
+
+Image that you prepare to design a on-line order system. Apparently, this system requires strict access in order to main safety.  So you must design a module to check the request sent by users: such as username and password, filters for repeated requests from the same IP address in short time, and check that make sure that the request pass through to the system only if there’s no suitable cached response.
+
+The **Chain of Responsibility** relies on transforming particular behaviors into stand-alone objects called *handlers*. In this case, each check should be extracted to its own class with a single method that performs the check. The request, along with its data, is passed to this method as an argument. It is easily to allocate the burden of check function to each handler and make each one play a certain role.
+
+#### Structure
+
+![Structure of the Chain Of Responsibility design pattern](https://refactoring.guru/images/patterns/diagrams/chain-of-responsibility/structure-indexed.png)
+
+#### Sample Code
+
+*Handler.java*
+
+```java
+public abstract class Handler {
+    Handler next;
+
+    public Handler(Handler next) {
+        this.next = next;
+    }
+
+    public Handler() {
+    }
+
+    protected boolean check(String username, String password){
+        if (this.next == null){
+            return true;
+        }
+        return next.check(username,password);
+    }
+}
+```
+
+*TokenHandler.java*
+
+```java
+public class TokenHandler extends Handler {
+
+    public TokenHandler(Handler next) {
+        super(next);
+    }
+
+    @Override
+    protected boolean check(String username, String password) {
+        System.out.println("Local Token is ok!");
+        return next.check(username, password);
+    }
+}
+```
+
+*TimeHandler.java*
+
+```java
+public class TimeHandler extends Handler {
+
+    public TimeHandler(Handler next) {
+        super(next);
+    }
+
+    @Override
+    protected boolean check(String username, String password) {
+        System.out.println("No rick in time period!");
+        return next.check(username, password);
+    }
+}
+```
+
+*RoleCheckHandler.java*
+
+```java
+public class RoleCheckHandler extends  Handler {
+    public RoleCheckHandler(Handler next) {
+        super(next);
+    }
+
+    public RoleCheckHandler() {
+        super();
+    }
+
+    @Override
+    protected boolean check(String username, String password) {
+
+        System.out.println("Username is in Data and the Password is correct!");
+        if (next == null) return true;
+        return next.check(username,password);
+    }
+}
+```
+
+*Request.java*
+
+```java
+public class Request {
+
+    String username;
+    String password;
+
+    Handler checkHandler;
+
+    public Request(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public void setCheckHandler(Handler checkHandler) {
+        this.checkHandler = checkHandler;
+    }
+
+    public boolean login(){
+        return checkHandler.check(this.username,this.password);
+    }
+}
+```
+
+*Client.java*
+
+```java
+public class TimeHandler extends Handler {
+
+    public TimeHandler(Handler next) {
+        super(next);
+    }
+
+    @Override
+    protected boolean check(String username, String password) {
+        System.out.println("No rick in time period!");
+        return next.check(username, password);
+    }
+}
+```
+
+
+
+### Command 
+
+
+
+#### Application Scenario
+
+
+
+#### Structure
+
+
+
+#### Sample Code
+
+
 
 
 
