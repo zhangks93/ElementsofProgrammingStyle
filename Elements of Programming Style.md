@@ -3250,7 +3250,7 @@ public class TimeHandler extends Handler {
 
 ### Command 
 
-
+**Command** is a behavioral design pattern that turns a request into a stand-alone object that contains all information about the request.
 
 #### Application Scenario
 
@@ -3258,9 +3258,91 @@ public class TimeHandler extends Handler {
 
 #### Structure
 
-
+![Structure of the Command design pattern](https://refactoring.guru/images/patterns/diagrams/command/structure.png)
 
 #### Sample Code
+
+*Command.java*
+
+```java
+public interface Command {
+   void execute();
+   void undo();
+}
+```
+
+*ConcreteCommand.java*
+
+```java
+public class ConcreteCommand implements Command {
+
+    Receiver recevier;
+
+    public ConcreteCommand(Receiver recevier) {
+        this.recevier = recevier;
+    }
+
+    @Override
+    public void execute() {
+        System.out.println("Concrete commands is excuting !");
+        recevier.doSomething();
+    }
+
+    @Override
+    public void undo() {
+        System.out.println("Undo the last command.");
+    }
+}
+```
+
+*Invoker.java*
+
+```java
+public class Invoker {
+
+    Command command;
+
+    public Invoker(Command command) {
+        this.command = command;
+    }
+
+    public void action(){
+        command.execute();
+    }
+}
+
+```
+
+*Receiver.java*
+
+```java
+public class Receiver {
+
+    public void doSomething(){
+        System.out.println("Do something....");
+    }
+}
+```
+
+*Client.java*
+
+```java
+public class Client {
+
+    public static void main(String[] args) {
+        Receiver receiver = new Receiver();
+        Command command = new ConcreteCommand(receiver);
+        command.execute();
+
+        Invoker invoker = new Invoker(command);
+        invoker.action();
+    }
+}
+```
+
+
+
+
 
 
 
