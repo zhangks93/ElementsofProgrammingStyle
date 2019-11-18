@@ -1583,6 +1583,231 @@ public class MyAppTest {
 
 #### You Need a Helper
 
+*JdbcHelper.java*
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import tdd.customer.domain.model.Customer;
+
+@Component
+public class JdbcHelper {
+
+    @Autowired
+    JdbcTemplate jdbc;
+
+    public void clearCustomerTable() {
+        jdbc.update("truncate table customer");
+    }
+
+    public Customer findCustomerFromDbById(Long id) {
+        return jdbc.queryForObject("select * from customer where id = ?"
+                , new CustomerJdbcMapper()
+                , id);
+    }
+
+    public Customer createCustomerInDb(Long id, String firstName, String lastName) {
+        Customer expected = new Customer(id, firstName, lastName);
+        jdbc.update("insert into customer (id, first_name, last_name) "
+                        + "values(?, ?, ?)"
+                , id
+                , firstName
+                , lastName
+        );
+
+        return expected;
+    }
+}
+```
+
+#### Integration Test in Service
+
+*CustomerServiceJdbc.java*
+
+```java
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import tdd.customer.domain.model.Customer;
+import tdd.customer.share.testhelper.JdbcHelper;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
+class CustomerServiceJdbcIT {
+    @Autowired
+    CustomerService service;
+
+    @Autowired
+    JdbcHelper helper;
+
+    @BeforeEach
+    void initDb() {
+        helper.clearCustomerTable();
+    }
+
+    @Test
+    void create_shouldCreateCustomer() {
+        //When
+        Customer expected = new Customer("Mike", "Johson");
+        expected.setId(service.create(expected).getId());
+
+        //Then
+        Customer actual = helper.findCustomerFromDbById(expected.getId());
+
+        assertThat(actual).isNotNull()
+                .isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    void findById_shouldSelectCertainCustomer() {
+
+        Customer expected = helper.createCustomerInDb(1L, "Mike", "Johson");
+
+        Customer actual = service
+                .findById(expected.getId())
+                .orElseGet(() ->
+                        fail("Could not find customer with ID " + expected.getId())
+                );
+
+        assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    void findAll_shouldFindAllCustomers() {
+
+        Customer zhangfei = helper.createCustomerInDb(1L, "Mike", "Johson");
+        Customer liubei = helper.createCustomerInDb(2L, "Lebron", "James");
+
+        List<Customer> actual = service.findAll();
+
+        assertThat(actual).hasSize(2)
+                .extracting("firstName", "lastName")
+                .contains(
+                        tuple(zhangfei.getFirstName(), zhangfei.getLastName()),
+                        tuple(liubei.getFirstName(), liubei.getLastName())
+                );
+    }
+}
+```
+
+
+
+#### Integration Test in Controller 
+
+*CustomerControllerJdbc.java*
+
+```java
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
+import tdd.customer.domain.model.Customer;
+import tdd.customer.share.testhelper.JdbcHelper;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
+import static org.assertj.core.api.Assertions.*;
+
+import static tdd.customer.share.testhelper.Utils.*;
+
+//@ExtendWith(SpringExtension.class)
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+class CustomerControllerJdbcIT {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private JdbcHelper helper;
+
+    @BeforeEach
+    void initDb() {
+        helper.clearCustomerTable();
+    }
+
+    @Test
+    void create_shouldCreateCustomer() throws Exception {
+
+        Customer expected = new Customer("云", "赵");
+
+        Long createdId = Long.valueOf(
+                mockMvc.perform(
+                        post("/api/customers")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(asJsonString(expected)))
+                        .andDo(print())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString()
+        );
+
+        Customer actual = helper.findCustomerFromDbById(createdId);
+
+        assertThat(actual).isEqualToComparingOnlyGivenFields(
+                expected
+                , "firstName"
+                , "lastName");
+    }
+
+    @Test
+    void findById_shouldFindCertainCustomer() throws Exception {
+        String expected = asJsonString(
+                helper.createCustomerInDb(
+                        1L, "羽", "关")
+        );
+
+        String actual = mockMvc
+                .perform(get("/api/customers/1"))
+                .andDo(print())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertJson(actual, expected);
+    }
+
+    @Test
+    void findAll_shouldFindAllCustomers() throws Exception {
+
+        Customer zhangfei = helper.createCustomerInDb(1L, "飞", "张");
+        Customer liubei = helper.createCustomerInDb(2L, "备", "刘");
+
+        String expected =asJsonString(new Customer[]{zhangfei, liubei});
+
+        String actual = mockMvc
+                .perform(get("/api/customers"))
+                .andDo(print())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertJson(actual, expected);
+    }
+}
+```
+
 
 
 ### Testing with a Mock Environment
@@ -3340,9 +3565,138 @@ public class Client {
 }
 ```
 
+### Iterator
 
 
 
+#### Application Scenario
+
+
+
+#### Structure
+
+
+
+#### Sample Code
+
+
+
+### Mediator
+
+
+
+#### Application Scenario
+
+
+
+#### Structure
+
+
+
+#### Sample Code
+
+
+
+### Memento
+
+**Memento** is a behavioral design pattern that lets you save and restore the previous state of an object without revealing the details of its implementation.
+
+#### Application Scenario
+
+Imagine that you’re creating a text editor app. In addition to simple  text editing, your editor can format text, insert inline images, etc.
+
+At some point, you decided to let users undo any operations carried  out on the text. This feature has become so common over the years that  nowadays people expect every app to have it. For the implementation, you  chose to take the direct approach. Before performing any operation, the  app records the state of all objects and saves it in some storage.  Later, when a user decides to revert an action, the app fetches the  latest snapshot from the history and uses it to restore the state of all  objects.
+
+The Memento pattern delegates creating the state snapshots to the actual owner of that state, the *originator*object. Hence, instead of other objects trying to copy the editor’s state from the “outside,” the editor class itself can make the snapshot since it has full access to its own state.
+
+#### Structure
+
+![Memento based on nested classes](https://refactoring.guru/images/patterns/diagrams/memento/structure1.png)
+
+#### Sample Code
+
+*Orignator.java*
+
+```java
+public class Originator {
+    private String state;
+ 
+    public String getState() {
+        return this.state;
+    }
+ 
+    public void setState(String state) {
+        System.out.println("NOW STATE IS"+state);
+        this.state = state;
+    }
+ 
+    public Memento CrateMemento(){
+        return  new Memento(state);
+    }
+    public void  restoreMemento(Memento memento){
+        this.state=memento.getState();
+    }
+}
+```
+
+*Memento.java*
+
+```java
+public class Memento {
+    private String state;
+ 
+    public Memento(String state) {
+        this.state = state;
+    }
+ 
+    public String getState() {
+        return state;
+    }
+ 
+    public void setState(String state) {
+        this.state = state;
+    }
+}
+```
+
+*CareTaker.java*
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class Caretaker {
+    private List<Memento> mementoList =new ArrayList<Memento>();
+ 
+    public Memento retieveMemento(int dex) {
+        return mementoList.get(dex);
+    }
+ 
+    public void setMemento(Memento memento) {
+ 
+        mementoList.add(memento);
+    }
+}
+```
+
+*Client.java*
+
+```java
+public class Client {
+    public static void main(String[] args) {
+        Originator originator=new Originator();
+        Caretaker caretaker=new Caretaker();
+        originator.setState("ON");
+        System.out.println(originator.getState());
+        caretaker.setMemento(originator.CrateMemento());
+        originator.setState("OFF");
+        System.out.println(originator.getState());
+        caretaker.setMemento(originator.CrateMemento());
+        originator.restoreMemento(caretaker.retieveMemento(1));
+        System.out.println(originator.getState());
+    }
+}
+```
 
 
 
