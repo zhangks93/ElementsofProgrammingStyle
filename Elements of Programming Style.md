@@ -1448,16 +1448,102 @@ If you use Maven in a Java project, add the following dependency to the Maven bu
 **NOTE: By adding the org.mokito.Mokito.* as an static import,  you can use methods directly and improve the readablity of your test code.**
 
 ```java
-
+import static org.mockito.Mockito.*;
 ```
 
 ##### Creating Mocks/Spies with Annotations
 
-```java
+- Annotate your test with *@RunWith(MockitoJUnitRunner.class)*.
+- Define the collaborators that you would like to mock.
+- Annotate those dependencies with @Mock annotation.
 
+```java
+@RunWith(MockitoJUnitRunner.class)
+public class MeanTaxFactorCalculatorTest {
+ 		static final double TAX_FACTOR = 10;
+ 		@Mock 
+    	TaxService taxService;
+ 		@InjectMocks 
+    	MeanTaxFactorCalculator systemUnderTest;
+ 		@Test
+ 		public void should_calculate_mean_tax_factor() {
+             // Arrange
+             given(taxService.getCurrentTaxFactorFor(any(Person.class))).
+                                             willReturn(TAX_FACTOR);
+             // Act
+            double meanTaxFactor = systemUnderTest.
+            calculateMeanTaxFactorFor(new Person());
+             // Assert
+             then(meanTaxFactor).isEqualTo(TAX_FACTOR);
+ 		}
+}
+```
+
+Also, you can create mocks/spies with *MockitoAnnotations.initMocks( )* before each test.
+
+```java
+public class MeanTaxFactorCalculatorTest {
+ 		static final double TAX_FACTOR = 10;
+ 		@Mock 
+    	TaxService taxService;
+ 		@InjectMocks 
+    	MeanTaxFactorCalculator systemUnderTest;
+    	@Before
+    	void setup(){
+            MockitoAnnotations.initMocks(this);
+        }
+ 		@Test
+ 		public void should_calculate_mean_tax_factor() {
+             // Arrange
+             given(taxService.getCurrentTaxFactorFor(any(Person.class))).
+                                             willReturn(TAX_FACTOR);
+             // Act
+            double meanTaxFactor = systemUnderTest.
+            calculateMeanTaxFactorFor(new Person());
+             // Assert
+             then(meanTaxFactor).isEqualTo(TAX_FACTOR);
+ 		}
+}
 ```
 
 ##### Creating Mocks/Spies of Final Classes
+
+You can create mocks of final classes by PowerMock.  At first, you should include the following library in your classpath.
+
+```xml
+<dependency>
+     <groupId>org.powermock</groupId>
+     <artifactId>powermock-api-mockito</artifactId>
+     <version>    </version>
+     <scope>test</scope>
+</dependency> 
+```
+
+Then you should annotate your test class with *@RunWith(PowerMockRunner.class)*.
+
+And you should provide all the classes that need to be prepared for testing (most likely bytecode manipulated) in the *@PrepareForTest* annotation. In general, classes that need to be prepared for testing will include classes with final, private, static or native methods; classes that are final and that should be 
+mocked; and also classes that should be returned as mocks on instantiation.
+
+```java
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(TaxService.class)
+public class TaxFactorCalculatorTest {
+         static final double TAX_FACTOR = 10000;
+         @Mock TaxService taxService;
+         @InjectMocks TaxFactorCalculator systemUnderTest;
+         @Test
+         public void should_calculate_tax_factor() {
+             
+ 			  given(taxService.calculateTaxFactorFor(Mockito.any(Person.
+													class))).willReturn(TAX_FACTOR);
+         
+             double taxFactorForPerson = systemUnderTest.
+            										calculateTaxFactorFor(new Person());
+
+ 			then(taxFactorForPerson).isEqualTo(TAX_FACTOR);
+		 }
+}
+```
 
 
 
@@ -1534,13 +1620,64 @@ public void testReturnValueInDependentOnMethodParameter2()  {
 }
 ```
 
-2. "DoReturn When" and "DoThrow When" and "DoAnswer When"
+2. "doReturn When" and "doThrow When" and "doAnswer When"
 
-Just like when(….).thenReturn(….) method chain, the DoReturn(...).when(...) method chain is also used to specify a return value for a method call with predefined parameters.
+Just like when(….).thenReturn(….) method chain, the doReturn(...).when(...) method chain is also used to specify a return value for a method call with predefined parameters.
 
 ```java
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
+    @Test
+    public void test1()  {
+            //  create mock
+            MyClass test = mock(MyClass.class);
+
+            // define return value for method getUniqueId()
+            doReturn(43).when(test).getUniqueId();
+
+            // use mock in test....
+            assertEquals(test.getUniqueId(), 43);
+    }
+	// demonstrates the return of multiple values
+    @Test
+    public void testMoreThanOneReturnValue()  {
+            Iterator<String> i= mock(Iterator.class);
+            when(i.next()).thenReturn("Mockito").thenReturn("rocks");
+        	doReturn("rocks")
+            String result= i.next()+" "+i.next();
+            assertEquals("Mockito rocks", result);
+    }
+// this test demonstrates how to return values based on the input
+@Test
+public void testReturnValueDependentOnMethodParameter()  {
+        Comparable<String> c= mock(Comparable.class);
+        when(c.compareTo("Mockito")).thenReturn(1);
+        when(c.compareTo("Eclipse")).thenReturn(2);
+        //assert
+        assertEquals(1, c.compareTo("Mockito"));
+}
+// this test demonstrates how to return values independent of the input value
+
+@Test
+public void testReturnValueInDependentOnMethodParameter()  {
+        Comparable<Integer> c= mock(Comparable.class);
+        when(c.compareTo(anyInt())).thenReturn(-1);
+        //assert
+        assertEquals(-1, c.compareTo(9));
+}
+// return a value based on the type of the provide parameter
+
+@Test
+public void testReturnValueInDependentOnMethodParameter2()  {
+        Comparable<Todo> c= mock(Comparable.class);
+        when(c.compareTo(isA(Todo.class))).thenReturn(0);
+        //assert
+        assertEquals(0, c.compareTo(new Todo(1)));
+}
 ```
+
+Note: in the arguments inputed into the stubbed method, *isA(CertainObeject.class)* and any(CertainObject.class) could help you pay little attention to them.  And you must use *eq(null)* when the argument is a null.
 
 ##### Stubbing Methods to Throw Exceptions
 
@@ -1567,8 +1704,6 @@ resources like database instances and hardware to be allocated for them. The int
 
 ### Integrating Spring TestContext
 
-
-
 ```java
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -1576,8 +1711,6 @@ public class MyAppTest {
   //some code here
 }
 ```
-
-
 
 ### Testing the Database CRUD
 
@@ -3696,9 +3829,43 @@ public class Client {
         System.out.println(originator.getState());
     }
 }
+
 ```
 
+### Observer 
 
+**Observer** is a behavioral design pattern that lets you define a subscription mechanism to notify multiple objects about any events that happen to the object they are observing.
+
+#### Application Scenario
+
+Imagine that you want to but the new model of the IPhone.  However the store is fat from your home, you must visit the store everyday and check the product availability. Apparently, each of your trip is meanless unless the product is arriving. On the other hand, the store could send tons of emails (which might be 
+considered spam) to all customers each time a new product becomes available. But it would upset other customers who aren’t interested in new products.
+
+**Observer Pattern** suggests a great balance for customer's pointless trips and resources for notifying wrong customers.  The object that has some interesting state is often called *subject*, but since it’s also going to notify other objects about the changes to its state, we’ll call it *publisher*. All other objects that want to track changes to the publisher’s state are called *subscribers*.
+
+#### Structure 
+
+![Notification methods](https://refactoring.guru/images/patterns/diagrams/observer/solution2-en.png)
+
+#### Sample Code
+
+
+
+### State 
+
+
+
+#### Application Scenario
+
+
+
+#### Structure
+
+
+
+#### Sample Code
+
+### 
 
 
 
