@@ -3949,8 +3949,6 @@ public class SocialSpammer {
 }
 ```
 
-
-
 ### Mediator
 
 
@@ -4090,19 +4088,183 @@ considered spam) to all customers each time a new product becomes available. But
 
 ### State 
 
-
+**State** is a behavioral design pattern that lets an object alter its behavior when its internal state changes. It appears as if the object changed its class.
 
 #### Application Scenario
 
+Imagine that we have a `Document` class. A document can be in one of three states: `Draft`, `Moderation` and `Published`. The `publish` method of the document works a little bit differently in each state:
 
+- In `Draft`, it moves the document to moderation.
+
+- In `Moderation`, it makes the document public, but only if the current user is an administrator.
+
+- In `Published`, it doesn’t do anything at all.
+
+  The State pattern suggests that you create new classes for all possible states of an object and extract all state-specific behaviors into these classes.
 
 #### Structure
 
-
+![Structure of the State design pattern](https://refactoring.guru/images/patterns/diagrams/state/structure.png)
 
 #### Sample Code
 
-### 
+ *State,java*
+
+```java
+public abstract class State {
+    Player player;
+
+    public State(Player player) {
+        this.player = player;
+    }
+
+    abstract String onPlay();
+    abstract String Next();
+    abstract String Previous();
+}
+```
+
+*ReadyState.java*
+
+```java
+public class ReadyState extends State {
+
+    public ReadyState(Player player) {
+        super(player);
+    }
+
+    @Override
+    public String onPlay() {
+        String action = player.startPlayback();
+        player.changeState(new PlayingState(player));
+        return action;
+    }
+
+    @Override
+    public String Next() {
+        return "Locked...";
+    }
+
+    @Override
+    public String Previous() {
+        return "Locked...";
+    }
+}
+```
+
+*LockedState.java*
+
+```java
+public class LockedState extends State {
+
+    public LockedState(Player player) {
+        super(player);
+		player.setPlaying(false);
+    }
+
+    @Override
+    String onPlay() {
+        player.changeState(new ReadyState(player));
+        return "Ready";
+    }
+
+    @Override
+    String Next() {
+        return "Locked...";
+    }
+
+    @Override
+    String Previous() {
+        return "Locked...";
+    }
+}
+```
+
+*PlayingState.java*
+
+```java
+public class PlayingState extends State {
+
+    public PlayingState(Player player) {
+        super(player);
+    }
+
+    @Override
+    String onPlay() {
+        return "Paused...";
+    }
+
+    @Override
+    String Next() {
+        return player.nextTrack();
+    }
+
+    @Override
+    String Previous() {
+        return player.previousTrack();
+    }
+}
+```
+
+*Player.java*
+
+```java
+public class Player {
+    private State state;
+    private boolean playing = false;
+    private List<String> playlist = new ArrayList<>();
+    private int currentTrack = 0;
+
+    public Player() {
+        setPlaying(true);
+        for (int i = 1; i <= 12; i++) {
+            playlist.add("Track " + i);
+        }
+    }
+
+    public void changeState(State state) {
+        this.state = state;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setPlaying(boolean playing) {
+        this.playing = playing;
+    }
+
+    public boolean isPlaying() {
+        return playing;
+    }
+
+    public String startPlayback() {
+        return "Playing " + playlist.get(currentTrack);
+    }
+
+    public String nextTrack() {
+        currentTrack++;
+        if (currentTrack > playlist.size() - 1) {
+            currentTrack = 0;
+        }
+        return "Playing " + playlist.get(currentTrack);
+    }
+
+    public String previousTrack() {
+        currentTrack--;
+        if (currentTrack < 0) {
+            currentTrack = playlist.size() - 1;
+        }
+        return "Playing " + playlist.get(currentTrack);
+    }
+
+    public void setCurrentTrackAfterStop() {
+        this.currentTrack = 0;
+    }
+}
+```
+
+
 
 
 
